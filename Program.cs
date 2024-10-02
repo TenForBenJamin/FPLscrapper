@@ -12,16 +12,18 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-        long startFplID = 1089205;
+        long startFplID = 1114702;
         // six 153204
         // PovertyLeague 1089205
         // R2G 420969
         // h2h 153197 H
         // FPLwire 36074
         // BetssonLeague 1173870
+        // KasbyLeague 190771
+        // ComicsLeague 1114702
         //  FantasyShow 56013
         Dictionary<string, string> leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-        GetFplDetailsArray(leaguePlayerNames,6, "PovertyLeague");
+        GetFplDetailsArray(leaguePlayerNames,6, "ComicsLeague");
 
     }
     
@@ -155,7 +157,7 @@ public class FolderManager
             driver.Quit(); // Close the browser
 
             // Example: Generate JS output and write to a file
-            string jsOutput = GenerateJsArray(fplDetailsList,LeagueName);
+            string jsOutput = GenerateJsArray(fplDetailsList,LeagueName,gameweek);
         }
     }
     public static string ConvertNewlineToSpace(string input)
@@ -165,20 +167,22 @@ public class FolderManager
     }
 
 
-    public  static string GenerateJsArray(List<JsonFPLMembers> members , string LigaNamen)
+    public  static string GenerateJsArray(List<JsonFPLMembers> members , string LigaNamen, int gw)
     {
         string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
         string jsOutput = $"var s = {jsonString};";
+        //int gw = 6;
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
-        string mainPath = "C:\\Users\\ss585\\IdeaProjects\\TenForBen.github.io\\FPL\\GW\\GW6\\" + dateFolderName +
+        string mainPath = "C:\\Users\\ss585\\IdeaProjects\\TenForBen.github.io\\FPL\\GW\\GW" +gw +"\\DB" +
                           "/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
         {
             Directory.CreateDirectory(directoryPath);
         }
-        string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
+        string filePath = directoryPath + "/" + LigaNamen + ".js";
+       // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
         File.WriteAllText(filePath, jsOutput);
         return jsOutput;
     }
