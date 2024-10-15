@@ -13,7 +13,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("R2G");
+       long startFplID = GetLeagueNumber("BetssonLeague");
+        int gw = 7;
 
         // six 153204
         // PovertyLeague 1089205
@@ -31,12 +32,12 @@ public class FolderManager
         if (leagueName == "h2h")
         {
             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "h");
-            GetFplDetailsArray(leaguePlayerNames, 7, leagueName);
+            GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
         }
         else
         {
             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-            GetFplDetailsArray(leaguePlayerNames, 7, leagueName);
+            GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
         }
 
 
@@ -55,6 +56,7 @@ public class FolderManager
         { "BetssonLeague", 1173870L },
         { "KasbyLeague", 190771L },
         { "ComicsLeague", 1114702L },
+        { "FPLpod", 4109 },
         { "Overall", 314 },
         { "Arsenal", 1 },
         { "FantasyShow", 56013L }
@@ -144,6 +146,8 @@ public class FolderManager
                 {
                     string teamName = entry.Value;
                     string managerId = entry.Key;
+                    string managerDetails;
+                    string TransferDetails;
 
                     // Navigate to the manager's FPL details page for the specified gameweek
                     driver.Navigate().GoToUrl($"https://fantasy.premierleague.com/entry/{managerId}/event/{gameweek}");
@@ -152,10 +156,31 @@ public class FolderManager
                     // Extract country code image URL
                     string xPathCountryImg = "//div[@class='sc-bdnxRM hbrYOM']/img";
                     string xPathLatestPoints = "//div[@class='EntryEvent__PrimaryValue-sc-l17rqm-4 jsdnqB']";
+                    string xPathManagerName = "//div[contains(@class, 'Entry__EntryName-sc-1kf863-0 cMEsev')]";
+                    string xPathTotalTransfer = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[5]";
+                    string xPathOverallPoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[1]";
+                    string xPathOverallRank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[2]";
+                    string xPathTotalPlayers = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[3]";
+                    string xPathGameWeekpoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[4]";
+                    string xPathInTheBank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[6]";
+                    string xPathSquadValue = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[7]";
+                
 
                     var element1 = driver.FindElement(By.XPath(xPathCountryImg));
                     var elementLp = driver.FindElement(By.XPath(xPathLatestPoints));
+                    var elementManagerName = driver.FindElement(By.XPath(xPathManagerName)); 
+                    var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
+                    var elementSquadValue = driver.FindElement(By.XPath(xPathSquadValue));
+                    var elementOverallRank = driver.FindElement(By.XPath(xPathOverallRank));
+                    var elementOverallPoints = driver.FindElement(By.XPath(xPathOverallPoints));
                     string Lp = elementLp.Text;
+                    string ManagerName = elementManagerName.Text;
+                    string TotalTransfer = elementTotalTransfer.Text;
+                    string OverallRank = elementOverallRank.Text;
+                    string SquadValue = elementSquadValue.Text;
+                    string OverallPoints = elementOverallPoints.Text;
+                    managerDetails = teamName + "( " + ManagerName + " )";
+                    TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
                     string src = element1.GetAttribute("src");
                     string countryCode = ExtractCountryCode(src); // Custom method to extract country code
 
@@ -176,8 +201,9 @@ public class FolderManager
                     {
                         fplDetailsList.Add(new JsonFPLMembers
                         {
-                            manager_Name = managerId,
-                            Teams = teamName,
+                            manager_Name = TransferDetails,
+                            
+                            Teams = managerDetails,
                             Latp = Lp,
                             Player_1 = playerNames[0],
                             Player_2 = playerNames[1],
