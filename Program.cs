@@ -13,9 +13,9 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("BetssonLeague");
-        int gw = 7;
-
+       long startFplID = GetLeagueNumber("six");
+        int gw = 10;
+        string allRunner;
         // six 153204
         // PovertyLeague 1089205
         // R2G 420969
@@ -27,6 +27,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
+            leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -34,12 +35,32 @@ public class FolderManager
             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "h");
             GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
         }
+        else if (leagueName == "all")
+        {
+            foreach (var entry in leagueData.Take(2))
+            {
+                Console.WriteLine($"Key: {entry.Key}, Value: {entry.Value}");
+                 allRunner = entry.Key;
+                startFplID = GetLeagueNumber(allRunner);
+                if (allRunner == "h2h")
+                {
+                    leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "h");
+                    GetFplDetailsArray(leaguePlayerNames, gw, allRunner);
+                }
+                else
+                {
+                    leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
+                    GetFplDetailsArray(leaguePlayerNames, gw, allRunner);
+                }
+            }
+        }
         else
         {
             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
             GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
         }
 
+        // create an allLeague option 
 
     }
 
@@ -47,18 +68,24 @@ public class FolderManager
     // Dictionary to hold the key-value pairs (with long values)
     public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
     {
-        { "six", 153204L },
+       
         { "PovertyLeague", 1089205L },
         { "R2G", 420969L },
         { "h2h", 153197L },
         { "India", 120 },
+        { "FPLCLLeague", 1768929 },
+        { "FFMLeague", 2675 },
         { "FPLwire", 36074L },
+        { "KeralaGCEK", 935873 },
+        { "BlastersLeague", 1817990 },
+        { "DisneyLeague", 822612 },
         { "BetssonLeague", 1173870L },
         { "KasbyLeague", 190771L },
         { "ComicsLeague", 1114702L },
         { "FPLpod", 4109 },
         { "Overall", 314 },
         { "Arsenal", 1 },
+        { "six", 153204L },
         { "FantasyShow", 56013L }
     };
 
@@ -225,7 +252,7 @@ public class FolderManager
 
                         });
                         LogCounter = LogCounter + 1;
-                        Console.WriteLine(LogCounter + " rank " + teamName);
+                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp+ " Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank);
                     }
                     /*
                      * OpenQA.Selenium.NoSuchElementException: 'no such element: Unable to locate element: {"method":"xpath","selector":"//div[@class='sc-bdnxRM hbrYOM']/img"}
