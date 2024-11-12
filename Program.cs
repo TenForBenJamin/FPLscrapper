@@ -13,8 +13,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("six");
-        int gw = 10;
+       long startFplID = GetLeagueNumber("PovertyLeague");
+        int gw = 11;
         string allRunner;
         // six 153204
         // PovertyLeague 1089205
@@ -37,7 +37,7 @@ public class FolderManager
         }
         else if (leagueName == "all")
         {
-            foreach (var entry in leagueData.Take(2))
+            foreach (var entry in leagueData.Take(6))
             {
                 Console.WriteLine($"Key: {entry.Key}, Value: {entry.Value}");
                  allRunner = entry.Key;
@@ -68,18 +68,18 @@ public class FolderManager
     // Dictionary to hold the key-value pairs (with long values)
     public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
     {
-       
+       /*
         { "PovertyLeague", 1089205L },
         { "R2G", 420969L },
         { "h2h", 153197L },
+        { "BetssonLeague", 1173870L },*/
+        { "BlastersLeague", 1817990 },
         { "India", 120 },
         { "FPLCLLeague", 1768929 },
         { "FFMLeague", 2675 },
         { "FPLwire", 36074L },
         { "KeralaGCEK", 935873 },
-        { "BlastersLeague", 1817990 },
         { "DisneyLeague", 822612 },
-        { "BetssonLeague", 1173870L },
         { "KasbyLeague", 190771L },
         { "ComicsLeague", 1114702L },
         { "FPLpod", 4109 },
@@ -290,7 +290,8 @@ public class FolderManager
         //int gw = 6;
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
-        string mainPath = "C:\\Users\\ss585\\IdeaProjects\\TenForBen.github.io\\FPL\\GW\\GW" +gw +"\\DB" +
+        // /Users/user/Documents/GitHub
+        string mainPath = "/Users/user/Documents/GitHub/TenForBen.github.io/FPL/GW/GW" +gw +"/DB" +
                           "/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
