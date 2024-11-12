@@ -14,7 +14,7 @@ public class FolderManager
     public static void Main(string[] args)
     {
        long startFplID = GetLeagueNumber("PovertyLeague");
-        int gw = 11;
+        int gw = 4;
         string allRunner;
         // six 153204
         // PovertyLeague 1089205
@@ -68,11 +68,11 @@ public class FolderManager
     // Dictionary to hold the key-value pairs (with long values)
     public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
     {
-       /*
+       
         { "PovertyLeague", 1089205L },
         { "R2G", 420969L },
         { "h2h", 153197L },
-        { "BetssonLeague", 1173870L },*/
+        { "BetssonLeague", 1173870L },
         { "BlastersLeague", 1817990 },
         { "India", 120 },
         { "FPLCLLeague", 1768929 },
