@@ -27,7 +27,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            leagueName = "all";
+            //leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
