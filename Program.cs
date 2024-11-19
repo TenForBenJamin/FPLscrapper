@@ -13,7 +13,7 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("PovertyLeague");
+       long startFplID = GetLeagueNumber("Random1");
         int gw = 4;
         string allRunner;
         // six 153204
@@ -86,7 +86,8 @@ public class FolderManager
         { "Overall", 314 },
         { "Arsenal", 1 },
         { "six", 153204L },
-        { "FantasyShow", 56013L }
+        { "FantasyShow", 56013L },
+        { "Random1", 27224 }
     };
 
     public static string GetLeagueNameByID(long leagueId)
