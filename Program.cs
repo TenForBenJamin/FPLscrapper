@@ -14,7 +14,9 @@ public class FolderManager
     public static void Main(string[] args)
     {
        long startFplID = GetLeagueNumber("Random1");
-        int gw = 4;
+        int gw = 13;
+
+      
         string allRunner;
         // six 153204
         // PovertyLeague 1089205
@@ -60,7 +62,6 @@ public class FolderManager
             GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
         }
 
-        // create an allLeague option 
 
     }
 
@@ -68,11 +69,14 @@ public class FolderManager
     // Dictionary to hold the key-value pairs (with long values)
     public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
     {
+        
        
         { "PovertyLeague", 1089205L },
         { "R2G", 420969L },
         { "h2h", 153197L },
-        { "BetssonLeague", 1173870L },
+        { "BetssonLeague", 1173870L }
+        
+,
         { "BlastersLeague", 1817990 },
         { "India", 120 },
         { "FPLCLLeague", 1768929 },
@@ -87,7 +91,8 @@ public class FolderManager
         { "Arsenal", 1 },
         { "six", 153204L },
         { "FantasyShow", 56013L },
-        { "Random1", 27224 }
+        { "Random1", 45353 },
+        { "Canal", 2257375 }
     };
 
     public static string GetLeagueNameByID(long leagueId)
@@ -209,8 +214,8 @@ public class FolderManager
                     string OverallPoints = elementOverallPoints.Text;
                     managerDetails = teamName + "( " + ManagerName + " )";
                     TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
-                    string src = element1.GetAttribute("src");
-                    string countryCode = ExtractCountryCode(src); // Custom method to extract country code
+                    string src = element1.GetAttribute("alt");
+                    string countryCode = src; // Custom method to extract country code
 
                     // Extract player details
                     string ply = "(//span[contains(@class,'styles__PitchElementData-sc-hv19ot-7 huoEoG')])";
@@ -253,7 +258,7 @@ public class FolderManager
 
                         });
                         LogCounter = LogCounter + 1;
-                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp+ " Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank);
+                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + src);
                     }
                     /*
                      * OpenQA.Selenium.NoSuchElementException: 'no such element: Unable to locate element: {"method":"xpath","selector":"//div[@class='sc-bdnxRM hbrYOM']/img"}
@@ -291,8 +296,7 @@ public class FolderManager
         //int gw = 6;
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
-        // /Users/user/Documents/GitHub
-        string mainPath = "/Users/user/Documents/GitHub/TenForBen.github.io/FPL/GW/GW" +gw +"/DB" +
+        string mainPath = "C:\\Users\\ss585\\IdeaProjects\\TenForBen.github.io\\FPL\\GW\\GW" +gw +"\\DB" +
                           "/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
