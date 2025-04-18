@@ -13,7 +13,7 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("PovertyLeague");
+       long startFplID = GetLeagueNumber("deadpool");
         int gw = 32;
 
       
@@ -29,7 +29,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            leagueName = "all";
+            //leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -58,112 +58,59 @@ public class FolderManager
         }
         else
         {
-            leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-            GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+            // leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
+            // GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+            Scrapper();
         }
 
 
     }
 
-
-    // Dictionary to hold the key-value pairs (with long values)
-    public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
+    public static void Scrapper()
     {
-        
-       
-        { "PovertyLeague", 1089205L },
-        { "R2G", 420969L },
-        { "h2h", 153197L },
-        { "BetssonLeague", 1173870L },
-        { "KasbyLeague", 190771L },
-        { "Overall", 1114702L },
-        { "Arsenal", 1 }/*
-        
-,
-        { "BlastersLeague", 1817990 },
-        { "India", 120 },
-        { "FPLCLLeague", 1768929 },
-        { "FFMLeague", 2675 },
-        { "FPLwire", 36074L },
-        { "KeralaGCEK", 935873 },
-        { "DisneyLeague", 822612 },
-        { "FPLpod", 4109 },
-        { "Overall", 314 },
-        { "Arsenal", 1 },
-        { "six", 153204L },
-        { "FantasyShow", 56013L },
-        { "Random1", 45353 },   
-        { "Canal", 2257375 }*/
-    };
-
-    public static string GetLeagueNameByID(long leagueId)
-    {
-        foreach (var kvp in leagueData)
+        List<JsonFPLMembers> fplDetailsList = new List<JsonFPLMembers>();
+        var options = new ChromeOptions();
+        string destination="bcn";
+        //options.AddArgument("--headless");
+        string url = "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&dateOut=2025-05-16&originIata=MLA&destinationIata=" +destination;
+        using (var driver = new ChromeDriver(options))
         {
-            if (kvp.Value == leagueId)
+            try
             {
-                return kvp.Key; // Return the key associated with the leagueId
+                driver.Navigate().GoToUrl(url);
+                Thread.Sleep(3000); // Wait for the page to load
+                //options.AddArgument("--headless"); ////button[contains(@class,'date-item body-m-lg body-m-sm')]
+                 string Buttonclicker = "(//button[contains(@class,'date-item body-m-lg body-m-sm')])[2]";
+                 
+                 var dayvalue = driver.FindElement(By.XPath(Buttonclicker));
+                // string Lp = dayvalue.Text;
+                for (int ii = 0; ii < 3; ii++)
+                {
+                    for(int i=0; i<5; i++)
+                    {
+                        string xPathCountryImg1 = "(//ul)[2]/li[" +(i+1)+"]";
+                        var dayvalue1 = driver.FindElement(By.XPath(xPathCountryImg1));
+                        string Lp1 = dayvalue1.Text;
+                        Console.WriteLine(Lp1);
+                    }
+                    //dayvalue.Click();
+                }
+                
+                
+                
+            }
+            catch (Exception ex)
+            {
+                // General catch for any other exceptions
+                Console.WriteLine("An unexpected error occurred: " + ex.Message);
+            }
+
+            finally
+            {
+                driver.Quit(); // Close the browser
             }
         }
-        Console.WriteLine($"No league found with ID: {leagueId}");
-        return null;
     }
-
-    static long GetUnixTimestamp()
-    {
-        // Get the current time in UTC
-        DateTimeOffset currentTime = DateTimeOffset.UtcNow;
-
-        // Return Unix time (seconds since January 1, 1970)
-        return currentTime.ToUnixTimeSeconds();
-    }
-
-
-    // Method to check and create a folder if it doesn't exist
-    public static void EnsureFolderExists(string basePath, string folderName)
-    {
-        // Combine the base path and folder name
-        string folderPath = Path.Combine(basePath, folderName);
-
-        // Check if the folder exists
-        if (!Directory.Exists(folderPath))
-        {
-            // If not, create the folder
-            Directory.CreateDirectory(folderPath);
-            Console.WriteLine($"Folder created: {folderPath}");
-        }
-        else
-        {
-            Console.WriteLine("Folder already exists.");
-        }
-
-    }
-
-    public static string ExtractCountryCode(string url)
-    {
-        string[] parts = url.Split('/');
-        string countryCodeWithExtension = parts[parts.Length - 1];
-        string countryCode = countryCodeWithExtension.Replace(".gif", "");
-        return countryCode;
-    }
-    /*
-    public string GenerateJsArray(List<JsonFPLMembers> members)
-    {
-        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
-        string jsOutput = $"var s = {jsonString};";
-        long unixTime = jg.GetCurrentUnixTime();
-        string dateFolderName = jg.GenerateDateFolderName();
-        string mainPath = "/Users/sisu02/Documents/cloner/TenForBen.github.io/FPL/GW/GW5/DB/" + dateFolderName +
-                          "/";
-        string directoryPath = Path.GetDirectoryName(mainPath);
-        if (!Directory.Exists(directoryPath))
-        {
-            Directory.CreateDirectory(directoryPath);
-        }
-        string filePath = directoryPath + "/" + unixTime + "_" + "_MaIN_league.js";
-        File.WriteAllText(filePath, jsOutput);
-        return jsOutput;
-    }*/
 
     public static void GetFplDetailsArray(Dictionary<string, string> leaguePlayerNames, int gameweek ,string LeagueName)
     {
@@ -283,6 +230,107 @@ public class FolderManager
            
         }
     }
+
+    // Dictionary to hold the key-value pairs (with long values)
+    public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
+    {
+        
+       
+        { "PovertyLeague", 1089205L },
+        { "R2G", 420969L },
+        { "h2h", 153197L },
+        { "BetssonLeague", 1173870L },
+        { "KasbyLeague", 190771L },
+        { "Overall", 1114702L },
+        { "Arsenal", 1 }/*
+        
+,
+        { "BlastersLeague", 1817990 },
+        { "India", 120 },
+        { "FPLCLLeague", 1768929 },
+        { "FFMLeague", 2675 },
+        { "FPLwire", 36074L },
+        { "KeralaGCEK", 935873 },
+        { "DisneyLeague", 822612 },
+        { "FPLpod", 4109 },
+        { "Overall", 314 },
+        { "Arsenal", 1 },
+        { "six", 153204L },
+        { "FantasyShow", 56013L },
+        { "Random1", 45353 },   
+        { "Canal", 2257375 }*/
+    };
+
+    public static string GetLeagueNameByID(long leagueId)
+    {
+        foreach (var kvp in leagueData)
+        {
+            if (kvp.Value == leagueId)
+            {
+                return kvp.Key; // Return the key associated with the leagueId
+            }
+        }
+        Console.WriteLine($"No league found with ID: {leagueId}");
+        return null;
+    }
+
+    static long GetUnixTimestamp()
+    {
+        // Get the current time in UTC
+        DateTimeOffset currentTime = DateTimeOffset.UtcNow;
+
+        // Return Unix time (seconds since January 1, 1970)
+        return currentTime.ToUnixTimeSeconds();
+    }
+
+
+    // Method to check and create a folder if it doesn't exist
+    public static void EnsureFolderExists(string basePath, string folderName)
+    {
+        // Combine the base path and folder name
+        string folderPath = Path.Combine(basePath, folderName);
+
+        // Check if the folder exists
+        if (!Directory.Exists(folderPath))
+        {
+            // If not, create the folder
+            Directory.CreateDirectory(folderPath);
+            Console.WriteLine($"Folder created: {folderPath}");
+        }
+        else
+        {
+            Console.WriteLine("Folder already exists.");
+        }
+
+    }
+
+    public static string ExtractCountryCode(string url)
+    {
+        string[] parts = url.Split('/');
+        string countryCodeWithExtension = parts[parts.Length - 1];
+        string countryCode = countryCodeWithExtension.Replace(".gif", "");
+        return countryCode;
+    }
+    /*
+    public string GenerateJsArray(List<JsonFPLMembers> members)
+    {
+        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
+        string jsOutput = $"var s = {jsonString};";
+        long unixTime = jg.GetCurrentUnixTime();
+        string dateFolderName = jg.GenerateDateFolderName();
+        string mainPath = "/Users/sisu02/Documents/cloner/TenForBen.github.io/FPL/GW/GW5/DB/" + dateFolderName +
+                          "/";
+        string directoryPath = Path.GetDirectoryName(mainPath);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+        string filePath = directoryPath + "/" + unixTime + "_" + "_MaIN_league.js";
+        File.WriteAllText(filePath, jsOutput);
+        return jsOutput;
+    }*/
+
+  
     public static string ConvertNewlineToSpace(string input)
     {
         // Replace '\n' with a space
