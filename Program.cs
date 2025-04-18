@@ -13,8 +13,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("Random1");
-        int gw = 13;
+       long startFplID = GetLeagueNumber("PovertyLeague");
+        int gw = 32;
 
       
         string allRunner;
@@ -29,7 +29,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            //leagueName = "all";
+            leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -74,7 +74,10 @@ public class FolderManager
         { "PovertyLeague", 1089205L },
         { "R2G", 420969L },
         { "h2h", 153197L },
-        { "BetssonLeague", 1173870L }
+        { "BetssonLeague", 1173870L },
+        { "KasbyLeague", 190771L },
+        { "Overall", 1114702L },
+        { "Arsenal", 1 }/*
         
 ,
         { "BlastersLeague", 1817990 },
@@ -84,15 +87,13 @@ public class FolderManager
         { "FPLwire", 36074L },
         { "KeralaGCEK", 935873 },
         { "DisneyLeague", 822612 },
-        { "KasbyLeague", 190771L },
-        { "ComicsLeague", 1114702L },
         { "FPLpod", 4109 },
         { "Overall", 314 },
         { "Arsenal", 1 },
         { "six", 153204L },
         { "FantasyShow", 56013L },
-        { "Random1", 45353 },
-        { "Canal", 2257375 }
+        { "Random1", 45353 },   
+        { "Canal", 2257375 }*/
     };
 
     public static string GetLeagueNameByID(long leagueId)
@@ -199,7 +200,7 @@ public class FolderManager
                     string xPathSquadValue = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[7]";
                 
 
-                    var element1 = driver.FindElement(By.XPath(xPathCountryImg));
+                    //var element1 = driver.FindElement(By.XPath(xPathCountryImg));
                     var elementLp = driver.FindElement(By.XPath(xPathLatestPoints));
                     var elementManagerName = driver.FindElement(By.XPath(xPathManagerName)); 
                     var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
@@ -214,8 +215,8 @@ public class FolderManager
                     string OverallPoints = elementOverallPoints.Text;
                     managerDetails = teamName + "( " + ManagerName + " )";
                     TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
-                    string src = element1.GetAttribute("alt");
-                    string countryCode = src; // Custom method to extract country code
+                    //string src = element1.GetAttribute("alt");
+                   // string countryCode = src; // Custom method to extract country code
 
                     // Extract player details
                     string ply = "(//span[contains(@class,'styles__PitchElementData-sc-hv19ot-7 huoEoG')])";
@@ -253,12 +254,12 @@ public class FolderManager
                             Player_13 = playerNames[12],
                             Player_14 = playerNames[13],
                             Player_15 = playerNames[14],
-                            SXL = countryCode // Add country code as additional info
+                            SXL = "countryCode" // Add country code as additional info
 
 
                         });
                         LogCounter = LogCounter + 1;
-                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + src);
+                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + "src");
                     }
                     /*
                      * OpenQA.Selenium.NoSuchElementException: 'no such element: Unable to locate element: {"method":"xpath","selector":"//div[@class='sc-bdnxRM hbrYOM']/img"}
@@ -296,7 +297,8 @@ public class FolderManager
         //int gw = 6;
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
-        string mainPath = "C:\\Users\\ss585\\IdeaProjects\\TenForBen.github.io\\FPL\\GW\\GW" +gw +"\\DB" +
+        ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB" +
                           "/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
