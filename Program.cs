@@ -5,6 +5,9 @@ using System.IO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Text.Json;
 using System.Diagnostics.Metrics;
+using Newtonsoft.Json;
+using RestSharp;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 public class FolderManager
 
@@ -60,7 +63,7 @@ public class FolderManager
         {
             // leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
             // GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
-            Scrapper();
+            Api_Scrapper();
         }
 
 
@@ -111,6 +114,58 @@ public class FolderManager
             }
         }
     }
+    
+    public static void Api_Scrapper()
+    {
+        var client =
+            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/FCO/cheapestPerDay?outboundMonthOfDate=2025-06-01&currency=EUR");
+        var request = new RestRequest();
+        var response = client.Execute(request);
+        var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+        foreach (var fare in data.Outbound.Fares)
+        {
+            Console.WriteLine($"Day: {fare.Day}");
+            Console.WriteLine($"Arrival Date: {fare.ArrivalDate}");
+            Console.WriteLine($"Departure Date: {fare.DepartureDate}");
+            Console.WriteLine($"Price: {fare.Price.Value} {fare.Price.CurrencySymbol}");
+            Console.WriteLine($"Sold Out: {fare.SoldOut}");
+            Console.WriteLine($"Unavailable: {fare.Unavailable}");
+            Console.WriteLine();
+        }
+        
+    }
+    
+    public class Price
+    {
+        public decimal Value { get; set; }
+        public string ValueMainUnit { get; set; }
+        public string ValueFractionalUnit { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencySymbol { get; set; }
+    }
+
+    public class Fare
+    {
+        public string Day { get; set; }
+        public string ArrivalDate { get; set; }
+        public string DepartureDate { get; set; }
+        public Price Price { get; set; }
+        public bool SoldOut { get; set; }
+        public bool Unavailable { get; set; }
+    }
+
+    public class Outbound
+    {
+        public List<Fare> Fares { get; set; }
+    }
+
+    public class ApiResponse
+    {
+        public Outbound Outbound { get; set; }
+    }
+    
+    
 
     public static void GetFplDetailsArray(Dictionary<string, string> leaguePlayerNames, int gameweek ,string LeagueName)
     {
