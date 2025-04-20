@@ -16,8 +16,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("deadpool");
-        int gw = 32;
+       long startFplID = GetLeagueNumber("R2G");
+        int gw = 33;
 
       
         string allRunner;
@@ -61,8 +61,8 @@ public class FolderManager
         }
         else
         {
-            // leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-            // GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
+             //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
             Api_Scrapper();
         }
 
@@ -116,26 +116,64 @@ public class FolderManager
     }
     
     public static void Api_Scrapper()
-    {
+    {   var source = "MLA";
+        var destination = "VNO";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var options = new ChromeOptions();
         var client =
-            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/FCO/cheapestPerDay?outboundMonthOfDate=2025-06-01&currency=EUR");
+            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination +"/cheapestPerDay?outboundMonthOfDate=2025-05-01&currency=EUR");
         var request = new RestRequest();
         var response = client.Execute(request);
         var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
 
         foreach (var fare in data.Outbound.Fares)
         {
+            
             Console.WriteLine($"Day: {fare.Day}");
-            Console.WriteLine($"Arrival Date: {fare.ArrivalDate}");
-            Console.WriteLine($"Departure Date: {fare.DepartureDate}");
-            Console.WriteLine($"Price: {fare.Price.Value} {fare.Price.CurrencySymbol}");
+            Console.WriteLine($"Arrival Date: {fare.ArrivalDate ?? "N/A"}");
+            Console.WriteLine($"Departure Date: {fare.DepartureDate ?? "N/A"}");
+
+            if (fare.Price != null)
+            {
+                ryanAirList.Add(new JsonAirlineFareMembers
+                {
+                    Day = fare.Day,
+                    PriceValue = fare.Price?.Value.ToString(),
+                    Arrival = fare.ArrivalDate,
+                    Departure = fare.DepartureDate
+                });
+            }
+            else
+            {
+                Console.WriteLine("Price: N/A");
+                ryanAirList.Add(new JsonAirlineFareMembers
+                {
+                    Day = fare.Day,
+                    PriceValue = "NA",
+                    Arrival = "fare.ArrivalDate",
+                    Departure = "fare.DepartureDate"
+                });
+            }
+
             Console.WriteLine($"Sold Out: {fare.SoldOut}");
             Console.WriteLine($"Unavailable: {fare.Unavailable}");
             Console.WriteLine();
+            
+            
+            
         }
-        
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, 33);
     }
-    
+
+    public class JsonAirlineFareMembers
+    {
+        public string Day { get; set; }
+        public string PriceValue { get; set; }
+        public string Arrival { get; set; }
+        public string Departure { get; set; }
+    }
+
     public class Price
     {
         public decimal Value { get; set; }
@@ -394,6 +432,25 @@ public class FolderManager
 
 
     public  static string GenerateJsArray(List<JsonFPLMembers> members , string LigaNamen, int gw)
+    {
+        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
+        string jsOutput = $"var s = {jsonString};";
+        //int gw = 6;
+        long unixTime = GetUnixTimestamp();
+        string dateFolderName = GenerateDateFolderName();
+        ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB" +
+                          "/";
+        string directoryPath = Path.GetDirectoryName(mainPath);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+        string filePath = directoryPath + "/" + LigaNamen + ".js";
+       // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
+        File.WriteAllText(filePath, jsOutput);
+        return jsOutput;
+    }public  static string GenerateJsArray4Airlines(List<JsonAirlineFareMembers> members , string LigaNamen, int gw)
     {
         string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
         string jsOutput = $"var s = {jsonString};";
