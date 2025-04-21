@@ -117,12 +117,13 @@ public class FolderManager
     
     public static void Api_Scrapper()
     {   var source = "MLA";
-        var destination = "VNO";
+        var destination = "STN";
+        var month = "2025-08-01";
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var options = new ChromeOptions();
         var client =
-            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination +"/cheapestPerDay?outboundMonthOfDate=2025-05-01&currency=EUR");
+            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
         var request = new RestRequest();
         var response = client.Execute(request);
         var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
@@ -151,8 +152,8 @@ public class FolderManager
                 {
                     Day = fare.Day,
                     PriceValue = "NA",
-                    Arrival = "fare.ArrivalDate",
-                    Departure = "fare.DepartureDate"
+                    Arrival = "NA",
+                    Departure = "NA"
                 });
             }
 
@@ -163,7 +164,7 @@ public class FolderManager
             
             
         }
-        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, 33);
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
     }
 
     public class JsonAirlineFareMembers
@@ -450,7 +451,7 @@ public class FolderManager
        // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
         File.WriteAllText(filePath, jsOutput);
         return jsOutput;
-    }public  static string GenerateJsArray4Airlines(List<JsonAirlineFareMembers> members , string LigaNamen, int gw)
+    }public  static string GenerateJsArray4Airlines(List<JsonAirlineFareMembers> members , string LigaNamen, string month)
     {
         string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
         string jsOutput = $"var s = {jsonString};";
@@ -458,14 +459,13 @@ public class FolderManager
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
         ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
-        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB" +
-                          "/";
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW33/DB/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
         {
             Directory.CreateDirectory(directoryPath);
         }
-        string filePath = directoryPath + "/" + LigaNamen + ".js";
+        string filePath = directoryPath + "/" + LigaNamen + "_" +month +".js";
        // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
         File.WriteAllText(filePath, jsOutput);
         return jsOutput;
