@@ -172,9 +172,10 @@ public class FolderManager
         List<string> eachDays = new List<string>();
         var destination = "BHX";
         var month = "2025-06-01";
-        for (int mm = 5; mm < 10; mm++)
+        for (int mm = 5; mm < 13; mm++)
         {
-            month="2025-0" +mm +"-01";
+            //month="2025-0" +mm +"-01";
+            month = $"2025-{mm:D2}-01";
             var options = new ChromeOptions();
             var client =
                 new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
