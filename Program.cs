@@ -16,8 +16,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("R2G");
-        int gw = 33;
+       long startFplID = GetLeagueNumber("R2Gs");
+        int gw = 34;
 
       
         string allRunner;
@@ -63,7 +63,7 @@ public class FolderManager
         {
              leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
              //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
-            Api_Scrapper();
+             Api_Scrapper_MultiMonths();
         }
 
 
@@ -117,8 +117,8 @@ public class FolderManager
     
     public static void Api_Scrapper()
     {   var source = "MLA";
-        var destination = "STN";
-        var month = "2025-08-01";
+        var destination = "BHX";
+        var month = "2025-05-01";
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var options = new ChromeOptions();
@@ -132,8 +132,8 @@ public class FolderManager
         {
             
             Console.WriteLine($"Day: {fare.Day}");
-            Console.WriteLine($"Arrival Date: {fare.ArrivalDate ?? "N/A"}");
-            Console.WriteLine($"Departure Date: {fare.DepartureDate ?? "N/A"}");
+            // Console.WriteLine($"Arrival Date: {fare.ArrivalDate ?? "N/A"}");
+            // Console.WriteLine($"Departure Date: {fare.DepartureDate ?? "N/A"}");
 
             if (fare.Price != null)
             {
@@ -144,6 +144,8 @@ public class FolderManager
                     Arrival = fare.ArrivalDate,
                     Departure = fare.DepartureDate
                 });
+                
+                Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
             }
             else
             {
@@ -157,13 +159,62 @@ public class FolderManager
                 });
             }
 
-            Console.WriteLine($"Sold Out: {fare.SoldOut}");
-            Console.WriteLine($"Unavailable: {fare.Unavailable}");
             Console.WriteLine();
             
             
             
         }
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+    public static void Api_Scrapper_MultiMonths()
+    {   var source = "MLA";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var destination = "BHX";
+        var month = "2025-06-01";
+        for (int mm = 5; mm < 10; mm++)
+        {
+            month="2025-0" +mm +"-01";
+            var options = new ChromeOptions();
+            var client =
+                new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
+                    +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+            var request = new RestRequest();
+            var response = client.Execute(request);
+            var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+            foreach (var fare in data.Outbound.Fares)
+            {
+            
+                Console.WriteLine($"Day: {fare.Day}");
+
+                if (fare.Price != null)
+                {
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = fare.Price?.Value.ToString(),
+                        Arrival = fare.ArrivalDate,
+                        Departure = fare.DepartureDate
+                    });
+                    Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+                }
+                else
+                {
+                    Console.WriteLine("Price: N/A");
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = "NA",
+                        Arrival = "NA",
+                        Departure = "NA"
+                    });
+                }
+                Console.WriteLine();
+            
+            }
+        }
+      
         string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
     }
 
