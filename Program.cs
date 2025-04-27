@@ -170,9 +170,9 @@ public class FolderManager
     {   var source = "MLA";
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
-        var destination = "BHX";
+        var destination = "BGY";
         var month = "2025-06-01";
-        for (int mm = 5; mm < 13; mm++)
+        for (int mm = 5; mm < 11; mm++)
         {
             //month="2025-0" +mm +"-01";
             month = $"2025-{mm:D2}-01";
@@ -511,13 +511,17 @@ public class FolderManager
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
         ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
-        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW33/DB/";
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW33/DB/"+LigaNamen+ "/";;
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
         {
             Directory.CreateDirectory(directoryPath);
         }
-        string filePath = directoryPath + "/" + LigaNamen + "_" +month +".js";
+
+        LigaNamen = LigaNamen + "_" + DateTime.Parse(month).ToString("MMM") + "_" + unixTime;
+        string filePath = directoryPath + "/" + LigaNamen + ".js";
+        // Sample Name STN_2025-10-01
+        //LPL_Oct_1745782241
        // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
         File.WriteAllText(filePath, jsOutput);
         return jsOutput;
