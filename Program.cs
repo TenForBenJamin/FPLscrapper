@@ -63,7 +63,7 @@ public class FolderManager
         {
              leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
              //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
-             Api_Scrapper_MultiMonths();
+             ProcessAllAirports();
         }
 
 
@@ -167,10 +167,65 @@ public class FolderManager
         string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
     }
     public static void Api_Scrapper_MultiMonths()
-    {   var source = "MLA";
+    {  
+        var source = "MLA";
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
-        var destination = "BGY";
+        var destination = "VNO";
+        var month = "2025-06-01";
+        for (int mm = 5; mm < 11; mm++)
+        {
+            //month="2025-0" +mm +"-01";
+            month = $"2025-{mm:D2}-01";
+            var options = new ChromeOptions();
+            var client =
+                new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
+                    +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+            var request = new RestRequest();
+            var response = client.Execute(request);
+            var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+            foreach (var fare in data.Outbound.Fares)
+            {
+            
+                Console.WriteLine($"Day: {fare.Day}");
+
+                if (fare.Price != null)
+                {
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = fare.Price?.Value.ToString(),
+                        Arrival = fare.ArrivalDate,
+                        Departure = fare.DepartureDate
+                    });
+                    Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+                }
+                else
+                {
+                    Console.WriteLine("Price: N/A");
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = "NA",
+                        Arrival = "NA",
+                        Departure = "NA"
+                    });
+                }
+                Console.WriteLine();
+            
+            }
+        }
+      
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+
+   public static void Api_Scrapper_MultiMonths_Reusable(string Aeroport)
+    {  
+        var source = "MLA";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var destination = Aeroport;
         var month = "2025-06-01";
         for (int mm = 5; mm < 11; mm++)
         {
@@ -407,6 +462,39 @@ public class FolderManager
         { "Canal", 2257375 }*/
     };
 
+    // Dictionary to hold the key-value pairs for Airport and AirportCodes
+    public static Dictionary<string, string> portDataMLA = new Dictionary<string, string>()
+    {
+        { "Riga", "RIX" },
+        { "RomeFCO", "FCO" },
+        { "LondonStanstead", "STN" },
+        { "VeniceTreviso", "TSF" },
+        { "Eindhoven", "EIN" },
+        { "Cologne", "CGN" },
+        { "Madrid", "MAD" },
+        { "Catania", "CTA" },
+        { "Manchester", "MAN" },
+        { "Zagreb", "ZAG" },
+        { "Bologna", "BLQ" },
+        { "Birmingham", "BHX" },
+        { "Paphos", "PFO" },
+        { "Barcelona", "BCN" },
+        { "Perugia", "PEG" },
+        { "Memmingem", "FMM" },
+        { "Luxembourg", "LUX" },
+        { "Liverpool", "LPL" },
+        { "Edinburgh", "EDI" },
+        { "belfast", "BFS" }
+    };
+    
+    public static void ProcessAllAirports()
+    {
+        foreach (var airport in portDataMLA.Values)
+        {
+            Api_Scrapper_MultiMonths_Reusable(airport);
+        }
+    }
+    
     public static string GetLeagueNameByID(long leagueId)
     {
         foreach (var kvp in leagueData)
