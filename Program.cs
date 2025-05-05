@@ -484,7 +484,11 @@ public class FolderManager
         { "Luxembourg", "LUX" },
         { "Liverpool", "LPL" },
         { "Edinburgh", "EDI" },
-        { "belfast", "BFS" }
+        { "Krakow", "KRK" },
+        { "StockhomArlanda", "ARN" },
+        { "Nis", "INI" },
+        { "belfast", "BFS" },
+        { "Sofia", "SOF" }
     };
     
     public static void ProcessAllAirports()
