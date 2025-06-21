@@ -17,7 +17,7 @@ public class FolderManager
     public static void Main(string[] args)
     {
        long startFplID = GetLeagueNumber("R2Gs");
-        int gw = 34;
+        int gw = 38;
 
       
         string allRunner;
@@ -488,7 +488,10 @@ public class FolderManager
         { "StockhomArlanda", "ARN" },
         { "Nis", "INI" },
         { "belfast", "BFS" },
-        { "Sofia", "SOF" }
+        { "Sofia", "SOF" },
+        { "Chania", "CHQ" },
+        { "Porto", "OPO" },
+        { "Bucharest", "OTP" }
     };
     
     public static void ProcessAllAirports()
