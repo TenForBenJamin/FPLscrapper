@@ -5,6 +5,9 @@ using System.IO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Text.Json;
 using System.Diagnostics.Metrics;
+using Newtonsoft.Json;
+using RestSharp;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 public class FolderManager
 
@@ -13,8 +16,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("PovertyLeague");
-        int gw = 32;
+       long startFplID = GetLeagueNumber("R2Gs");
+        int gw = 38;
 
       
         string allRunner;
@@ -29,7 +32,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            leagueName = "all";
+            //leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -58,112 +61,257 @@ public class FolderManager
         }
         else
         {
-            leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-            GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
+             //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+             ProcessAllAirports();
         }
 
 
     }
 
-
-    // Dictionary to hold the key-value pairs (with long values)
-    public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
+    public static void Scrapper()
     {
-        
-       
-        { "PovertyLeague", 1089205L },
-        { "R2G", 420969L },
-        { "h2h", 153197L },
-        { "BetssonLeague", 1173870L },
-        { "KasbyLeague", 190771L },
-        { "Overall", 1114702L },
-        { "Arsenal", 1 }/*
-        
-,
-        { "BlastersLeague", 1817990 },
-        { "India", 120 },
-        { "FPLCLLeague", 1768929 },
-        { "FFMLeague", 2675 },
-        { "FPLwire", 36074L },
-        { "KeralaGCEK", 935873 },
-        { "DisneyLeague", 822612 },
-        { "FPLpod", 4109 },
-        { "Overall", 314 },
-        { "Arsenal", 1 },
-        { "six", 153204L },
-        { "FantasyShow", 56013L },
-        { "Random1", 45353 },   
-        { "Canal", 2257375 }*/
-    };
-
-    public static string GetLeagueNameByID(long leagueId)
-    {
-        foreach (var kvp in leagueData)
+        List<JsonFPLMembers> fplDetailsList = new List<JsonFPLMembers>();
+        var options = new ChromeOptions();
+        string destination="bcn";
+        //options.AddArgument("--headless");
+        string url = "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&dateOut=2025-05-16&originIata=MLA&destinationIata=" +destination;
+        using (var driver = new ChromeDriver(options))
         {
-            if (kvp.Value == leagueId)
+            try
             {
-                return kvp.Key; // Return the key associated with the leagueId
+                driver.Navigate().GoToUrl(url);
+                Thread.Sleep(3000); // Wait for the page to load
+                //options.AddArgument("--headless"); ////button[contains(@class,'date-item body-m-lg body-m-sm')]
+                 string Buttonclicker = "(//button[contains(@class,'date-item body-m-lg body-m-sm')])[2]";
+                 
+                 var dayvalue = driver.FindElement(By.XPath(Buttonclicker));
+                // string Lp = dayvalue.Text;
+                for (int ii = 0; ii < 3; ii++)
+                {
+                    for(int i=0; i<5; i++)
+                    {
+                        string xPathCountryImg1 = "(//ul)[2]/li[" +(i+1)+"]";
+                        var dayvalue1 = driver.FindElement(By.XPath(xPathCountryImg1));
+                        string Lp1 = dayvalue1.Text;
+                        Console.WriteLine(Lp1);
+                    }
+                    //dayvalue.Click();
+                }
+                
+                
+                
+            }
+            catch (Exception ex)
+            {
+                // General catch for any other exceptions
+                Console.WriteLine("An unexpected error occurred: " + ex.Message);
+            }
+
+            finally
+            {
+                driver.Quit(); // Close the browser
             }
         }
-        Console.WriteLine($"No league found with ID: {leagueId}");
-        return null;
     }
+    
+    public static void Api_Scrapper()
+    {   var source = "MLA";
+        var destination = "BHX";
+        var month = "2025-05-01";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var options = new ChromeOptions();
+        var client =
+            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+        var request = new RestRequest();
+        var response = client.Execute(request);
+        var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
 
-    static long GetUnixTimestamp()
-    {
-        // Get the current time in UTC
-        DateTimeOffset currentTime = DateTimeOffset.UtcNow;
-
-        // Return Unix time (seconds since January 1, 1970)
-        return currentTime.ToUnixTimeSeconds();
-    }
-
-
-    // Method to check and create a folder if it doesn't exist
-    public static void EnsureFolderExists(string basePath, string folderName)
-    {
-        // Combine the base path and folder name
-        string folderPath = Path.Combine(basePath, folderName);
-
-        // Check if the folder exists
-        if (!Directory.Exists(folderPath))
+        foreach (var fare in data.Outbound.Fares)
         {
-            // If not, create the folder
-            Directory.CreateDirectory(folderPath);
-            Console.WriteLine($"Folder created: {folderPath}");
-        }
-        else
-        {
-            Console.WriteLine("Folder already exists.");
-        }
+            
+            Console.WriteLine($"Day: {fare.Day}");
+            // Console.WriteLine($"Arrival Date: {fare.ArrivalDate ?? "N/A"}");
+            // Console.WriteLine($"Departure Date: {fare.DepartureDate ?? "N/A"}");
 
+            if (fare.Price != null)
+            {
+                ryanAirList.Add(new JsonAirlineFareMembers
+                {
+                    Day = fare.Day,
+                    PriceValue = fare.Price?.Value.ToString(),
+                    Arrival = fare.ArrivalDate,
+                    Departure = fare.DepartureDate
+                });
+                
+                Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+            }
+            else
+            {
+                Console.WriteLine("Price: N/A");
+                ryanAirList.Add(new JsonAirlineFareMembers
+                {
+                    Day = fare.Day,
+                    PriceValue = "NA",
+                    Arrival = "NA",
+                    Departure = "NA"
+                });
+            }
+
+            Console.WriteLine();
+            
+            
+            
+        }
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+    public static void Api_Scrapper_MultiMonths()
+    {  
+        var source = "MLA";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var destination = "VNO";
+        var month = "2025-06-01";
+        for (int mm = 5; mm < 11; mm++)
+        {
+            //month="2025-0" +mm +"-01";
+            month = $"2025-{mm:D2}-01";
+            var options = new ChromeOptions();
+            var client =
+                new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
+                    +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+            var request = new RestRequest();
+            var response = client.Execute(request);
+            var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+            foreach (var fare in data.Outbound.Fares)
+            {
+            
+                Console.WriteLine($"Day: {fare.Day}");
+
+                if (fare.Price != null)
+                {
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = fare.Price?.Value.ToString(),
+                        Arrival = fare.ArrivalDate,
+                        Departure = fare.DepartureDate
+                    });
+                    Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+                }
+                else
+                {
+                    Console.WriteLine("Price: N/A");
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = "NA",
+                        Arrival = "NA",
+                        Departure = "NA"
+                    });
+                }
+                Console.WriteLine();
+            
+            }
+        }
+      
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
     }
 
-    public static string ExtractCountryCode(string url)
-    {
-        string[] parts = url.Split('/');
-        string countryCodeWithExtension = parts[parts.Length - 1];
-        string countryCode = countryCodeWithExtension.Replace(".gif", "");
-        return countryCode;
-    }
-    /*
-    public string GenerateJsArray(List<JsonFPLMembers> members)
-    {
-        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
-        string jsOutput = $"var s = {jsonString};";
-        long unixTime = jg.GetCurrentUnixTime();
-        string dateFolderName = jg.GenerateDateFolderName();
-        string mainPath = "/Users/sisu02/Documents/cloner/TenForBen.github.io/FPL/GW/GW5/DB/" + dateFolderName +
-                          "/";
-        string directoryPath = Path.GetDirectoryName(mainPath);
-        if (!Directory.Exists(directoryPath))
+   public static void Api_Scrapper_MultiMonths_Reusable(string Aeroport)
+    {  
+        var source = "MLA";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var destination = Aeroport;
+        var month = "2025-06-01";
+        for (int mm = 5; mm < 11; mm++)
         {
-            Directory.CreateDirectory(directoryPath);
+            //month="2025-0" +mm +"-01";
+            month = $"2025-{mm:D2}-01";
+            var options = new ChromeOptions();
+            var client =
+                new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
+                    +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+            var request = new RestRequest();
+            var response = client.Execute(request);
+            var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+            foreach (var fare in data.Outbound.Fares)
+            {
+            
+                Console.WriteLine($"Day: {fare.Day}");
+
+                if (fare.Price != null)
+                {
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = fare.Price?.Value.ToString(),
+                        Arrival = fare.ArrivalDate,
+                        Departure = fare.DepartureDate
+                    });
+                    Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+                }
+                else
+                {
+                    Console.WriteLine("Price: N/A");
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = "NA",
+                        Arrival = "NA",
+                        Departure = "NA"
+                    });
+                }
+                Console.WriteLine();
+            
+            }
         }
-        string filePath = directoryPath + "/" + unixTime + "_" + "_MaIN_league.js";
-        File.WriteAllText(filePath, jsOutput);
-        return jsOutput;
-    }*/
+      
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+
+    public class JsonAirlineFareMembers
+    {
+        public string Day { get; set; }
+        public string PriceValue { get; set; }
+        public string Arrival { get; set; }
+        public string Departure { get; set; }
+    }
+
+    public class Price
+    {
+        public decimal Value { get; set; }
+        public string ValueMainUnit { get; set; }
+        public string ValueFractionalUnit { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencySymbol { get; set; }
+    }
+
+    public class Fare
+    {
+        public string Day { get; set; }
+        public string ArrivalDate { get; set; }
+        public string DepartureDate { get; set; }
+        public Price Price { get; set; }
+        public bool SoldOut { get; set; }
+        public bool Unavailable { get; set; }
+    }
+
+    public class Outbound
+    {
+        public List<Fare> Fares { get; set; }
+    }
+
+    public class ApiResponse
+    {
+        public Outbound Outbound { get; set; }
+    }
+    
+    
 
     public static void GetFplDetailsArray(Dictionary<string, string> leaguePlayerNames, int gameweek ,string LeagueName)
     {
@@ -283,6 +431,147 @@ public class FolderManager
            
         }
     }
+
+    // Dictionary to hold the key-value pairs (with long values)
+    public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
+    {
+        
+       
+        { "PovertyLeague", 1089205L },
+        { "R2G", 420969L },
+        { "h2h", 153197L },
+        { "BetssonLeague", 1173870L },
+        { "KasbyLeague", 190771L },
+        { "Overall", 1114702L },
+        { "Arsenal", 1 }/*
+        
+,
+        { "BlastersLeague", 1817990 },
+        { "India", 120 },
+        { "FPLCLLeague", 1768929 },
+        { "FFMLeague", 2675 },
+        { "FPLwire", 36074L },
+        { "KeralaGCEK", 935873 },
+        { "DisneyLeague", 822612 },
+        { "FPLpod", 4109 },
+        { "Overall", 314 },
+        { "Arsenal", 1 },
+        { "six", 153204L },
+        { "FantasyShow", 56013L },
+        { "Random1", 45353 },   
+        { "Canal", 2257375 }*/
+    };
+
+    // Dictionary to hold the key-value pairs for Airport and AirportCodes
+    public static Dictionary<string, string> portDataMLA = new Dictionary<string, string>()
+    {
+        { "Riga", "RIX" },
+        { "RomeFCO", "FCO" },
+        { "LondonStanstead", "STN" },
+        { "VeniceTreviso", "TSF" },
+        { "Eindhoven", "EIN" },
+        { "Cologne", "CGN" },
+        { "Madrid", "MAD" },
+        { "Catania", "CTA" },
+        { "Manchester", "MAN" },
+        { "Zagreb", "ZAG" },
+        { "Bologna", "BLQ" },
+        { "Birmingham", "BHX" },
+        { "Paphos", "PFO" },
+        { "Barcelona", "BCN" },
+        { "Perugia", "PEG" },
+        { "Memmingem", "FMM" },
+        { "Luxembourg", "LUX" },
+        { "Liverpool", "LPL" },
+        { "Edinburgh", "EDI" },
+        { "Krakow", "KRK" },
+        { "StockhomArlanda", "ARN" },
+        { "Nis", "INI" },
+        { "belfast", "BFS" },
+        { "Sofia", "SOF" },
+        { "Chania", "CHQ" },
+        { "Porto", "OPO" },
+        { "Bucharest", "OTP" }
+    };
+    
+    public static void ProcessAllAirports()
+    {
+        foreach (var airport in portDataMLA.Values)
+        {
+            Api_Scrapper_MultiMonths_Reusable(airport);
+        }
+    }
+    
+    public static string GetLeagueNameByID(long leagueId)
+    {
+        foreach (var kvp in leagueData)
+        {
+            if (kvp.Value == leagueId)
+            {
+                return kvp.Key; // Return the key associated with the leagueId
+            }
+        }
+        Console.WriteLine($"No league found with ID: {leagueId}");
+        return null;
+    }
+
+    static long GetUnixTimestamp()
+    {
+        // Get the current time in UTC
+        DateTimeOffset currentTime = DateTimeOffset.UtcNow;
+
+        // Return Unix time (seconds since January 1, 1970)
+        return currentTime.ToUnixTimeSeconds();
+    }
+
+
+    // Method to check and create a folder if it doesn't exist
+    public static void EnsureFolderExists(string basePath, string folderName)
+    {
+        // Combine the base path and folder name
+        string folderPath = Path.Combine(basePath, folderName);
+
+        // Check if the folder exists
+        if (!Directory.Exists(folderPath))
+        {
+            // If not, create the folder
+            Directory.CreateDirectory(folderPath);
+            Console.WriteLine($"Folder created: {folderPath}");
+        }
+        else
+        {
+            Console.WriteLine("Folder already exists.");
+        }
+
+    }
+
+    public static string ExtractCountryCode(string url)
+    {
+        string[] parts = url.Split('/');
+        string countryCodeWithExtension = parts[parts.Length - 1];
+        string countryCode = countryCodeWithExtension.Replace(".gif", "");
+        return countryCode;
+    }
+    /*
+    public string GenerateJsArray(List<JsonFPLMembers> members)
+    {
+        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
+        string jsOutput = $"var s = {jsonString};";
+        long unixTime = jg.GetCurrentUnixTime();
+        string dateFolderName = jg.GenerateDateFolderName();
+        string mainPath = "/Users/sisu02/Documents/cloner/TenForBen.github.io/FPL/GW/GW5/DB/" + dateFolderName +
+                          "/";
+        string directoryPath = Path.GetDirectoryName(mainPath);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+        string filePath = directoryPath + "/" + unixTime + "_" + "_MaIN_league.js";
+        File.WriteAllText(filePath, jsOutput);
+        return jsOutput;
+    }*/
+
+  
     public static string ConvertNewlineToSpace(string input)
     {
         // Replace '\n' with a space
@@ -306,6 +595,28 @@ public class FolderManager
             Directory.CreateDirectory(directoryPath);
         }
         string filePath = directoryPath + "/" + LigaNamen + ".js";
+       // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
+        File.WriteAllText(filePath, jsOutput);
+        return jsOutput;
+    }public  static string GenerateJsArray4Airlines(List<JsonAirlineFareMembers> members , string LigaNamen, string month)
+    {
+        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
+        string jsOutput = $"var s = {jsonString};";
+        //int gw = 6;
+        long unixTime = GetUnixTimestamp();
+        string dateFolderName = GenerateDateFolderName();
+        ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW33/DB/"+LigaNamen+ "/";;
+        string directoryPath = Path.GetDirectoryName(mainPath);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        LigaNamen = LigaNamen + "_" + DateTime.Parse(month).ToString("MMM") + "_" + unixTime;
+        string filePath = directoryPath + "/" + LigaNamen + ".js";
+        // Sample Name STN_2025-10-01
+        //LPL_Oct_1745782241
        // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
         File.WriteAllText(filePath, jsOutput);
         return jsOutput;
