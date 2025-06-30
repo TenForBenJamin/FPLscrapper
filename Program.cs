@@ -226,8 +226,8 @@ public class FolderManager
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var destination = Aeroport;
-        var month = "2025-06-01";
-        for (int mm = 5; mm < 11; mm++)
+        var month = "2025-07-01";
+        for (int mm = 7; mm < 13; mm++)
         {
             //month="2025-0" +mm +"-01";
             month = $"2025-{mm:D2}-01";
@@ -491,7 +491,8 @@ public class FolderManager
         { "Sofia", "SOF" },
         { "Chania", "CHQ" },
         { "Porto", "OPO" },
-        { "Bucharest", "OTP" }
+        { "Bucharest", "OTP" },
+        { "Vienna", "VIE" }
     };
     
     public static void ProcessAllAirports()
