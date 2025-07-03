@@ -492,6 +492,8 @@ public class FolderManager
         { "Chania", "CHQ" },
         { "Porto", "OPO" },
         { "Bucharest", "OTP" },
+        { "Bournemouth", "BOH" },
+        { "Norwich", "NWI" },
         { "Vienna", "VIE" }
     };
     
