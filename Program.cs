@@ -16,15 +16,15 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("R2Gs");
-        int gw = 38;
+       long startFplID = GetLeagueNumber("FPLwire");
+        int gw = 2;
 
       
         string allRunner;
         // six 153204
         // PovertyLeague 1089205
         // R2G 420969
-        // h2h 153197 H
+        // h2h 153197 H | 733429
         // FPLwire 36074
         // Arsenal 36074
         // BetssonLeague 1173870
@@ -32,7 +32,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            //leagueName = "all";
+            leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -62,8 +62,8 @@ public class FolderManager
         else
         {
              leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-             //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
-             ProcessAllAirports();
+             GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+            // ProcessAllAirports();
         }
 
 
@@ -98,9 +98,7 @@ public class FolderManager
                     }
                     //dayvalue.Click();
                 }
-                
-                
-                
+                   
             }
             catch (Exception ex)
             {
@@ -226,8 +224,8 @@ public class FolderManager
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var destination = Aeroport;
-        var month = "2025-07-01";
-        for (int mm = 7; mm < 13; mm++)
+        var month = "2025-08-01";
+        for (int mm = 8; mm < 13; mm++)
         {
             //month="2025-0" +mm +"-01";
             month = $"2025-{mm:D2}-01";
@@ -334,15 +332,15 @@ public class FolderManager
                     // Navigate to the manager's FPL details page for the specified gameweek
                     driver.Navigate().GoToUrl($"https://fantasy.premierleague.com/entry/{managerId}/event/{gameweek}");
                     Thread.Sleep(3000); // Wait for the page to load
-                    options.AddArgument("--headless");
+                    //options.AddArgument("--headless");
                     // Extract country code image URL
                     string xPathCountryImg = "//div[@class='sc-bdnxRM hbrYOM']/img";
-                    string xPathLatestPoints = "//div[@class='EntryEvent__PrimaryValue-sc-l17rqm-4 jsdnqB']";
-                    string xPathManagerName = "//div[contains(@class, 'Entry__EntryName-sc-1kf863-0 cMEsev')]";
+                    string xPathLatestPoints = "//div[@class='_18v1mul1']";
+                    string xPathManagerName = "//div[contains(@class, '_1iy1znb2')]";
                     string xPathTotalTransfer = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[5]";
-                    string xPathOverallPoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[1]";
-                    string xPathOverallRank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[2]";
-                    string xPathTotalPlayers = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[3]";
+                    string xPathOverallPoints = "(//div[contains(@class, 'rd5cco6')])[1]";
+                    string xPathOverallRank = "(//div[contains(@class, 'rd5cco6')])[2]";
+                    string xPathTotalPlayers = "(//div[contains(@class, 'rd5cco6')])[3]";
                     string xPathGameWeekpoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[4]";
                     string xPathInTheBank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[6]";
                     string xPathSquadValue = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[7]";
@@ -351,23 +349,26 @@ public class FolderManager
                     //var element1 = driver.FindElement(By.XPath(xPathCountryImg));
                     var elementLp = driver.FindElement(By.XPath(xPathLatestPoints));
                     var elementManagerName = driver.FindElement(By.XPath(xPathManagerName)); 
-                    var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
-                    var elementSquadValue = driver.FindElement(By.XPath(xPathSquadValue));
+                    //var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
+                    //var elementSquadValue = driver.FindElement(By.XPath(xPathSquadValue));
                     var elementOverallRank = driver.FindElement(By.XPath(xPathOverallRank));
                     var elementOverallPoints = driver.FindElement(By.XPath(xPathOverallPoints));
                     string Lp = elementLp.Text;
+                    Lp= ExtractFirstLine(Lp);
                     string ManagerName = elementManagerName.Text;
-                    string TotalTransfer = elementTotalTransfer.Text;
+                    //string TotalTransfer = elementTotalTransfer.Text;
                     string OverallRank = elementOverallRank.Text;
-                    string SquadValue = elementSquadValue.Text;
+                    //string SquadValue = elementSquadValue.Text;
                     string OverallPoints = elementOverallPoints.Text;
                     managerDetails = teamName + "( " + ManagerName + " )";
-                    TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
+                   // TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
+                    TransferDetails = OverallPoints + "( " + OverallRank + " )" ;
                     //string src = element1.GetAttribute("alt");
                    // string countryCode = src; // Custom method to extract country code
 
                     // Extract player details
-                    string ply = "(//span[contains(@class,'styles__PitchElementData-sc-hv19ot-7 huoEoG')])";
+                    string ply = "(//div[contains(@class,'_2j6lqn0')])";
+                    // 15 entries (//div[contains(@class,'_2j6lqn0')])[6]/div/span
                     var elementsWithClassName = driver.FindElements(By.XPath(ply));
                     List<string> playerNames = new List<string>();
 
@@ -437,14 +438,14 @@ public class FolderManager
     {
         
        
-        { "PovertyLeague", 1089205L },
-        { "R2G", 420969L },
-        { "h2h", 153197L },
-        { "BetssonLeague", 1173870L },
-        { "KasbyLeague", 190771L },
-        { "Overall", 1114702L },
-        { "Arsenal", 1 }/*
-        
+        { "PovertyLeague", 1360978 },
+        { "R2G", 330720 },
+        { "h2h", 733429 },
+        { "BetssonLeague", 1465097 },
+        { "ArsenalMalta", 306338 },
+        { "Overall", 314 },
+        { "FPLwire", 239645 }/*
+
 ,
         { "BlastersLeague", 1817990 },
         { "India", 120 },
@@ -458,7 +459,7 @@ public class FolderManager
         { "Arsenal", 1 },
         { "six", 153204L },
         { "FantasyShow", 56013L },
-        { "Random1", 45353 },   
+        { "Random1", 45353 },
         { "Canal", 2257375 }*/
     };
 
@@ -494,7 +495,8 @@ public class FolderManager
         { "Bucharest", "OTP" },
         { "Bournemouth", "BOH" },
         { "Norwich", "NWI" },
-        { "Vienna", "VIE" }
+        { "Glasgow", "GLA" },
+        { "Seville", "SVQ" }
     };
     
     public static void ProcessAllAirports()
@@ -590,7 +592,7 @@ public class FolderManager
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
         ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
-        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB" +
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB/new" +
                           "/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
@@ -704,6 +706,16 @@ public class FolderManager
             Console.WriteLine($"League name '{leagueName}' not found.");
             return 90980; // Return a sentinel value to indicate the key was not found
         }
+    }
+    
+    static string ExtractFirstLine(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        return input.Split('\n')[0].Trim();
     }
 
 }
