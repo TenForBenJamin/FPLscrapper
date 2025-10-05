@@ -16,8 +16,8 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("FPLwire");
-        int gw = 2;
+       long startFplID = GetLeagueNumber("KasbyLeague");
+        int gw = 7;
 
       
         string allRunner;
@@ -28,7 +28,7 @@ public class FolderManager
         // FPLwire 36074
         // Arsenal 36074
         // BetssonLeague 1173870
-        // KasbyLeague 190771
+        // KasbyLeague 1625759
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
@@ -334,8 +334,9 @@ public class FolderManager
                     Thread.Sleep(3000); // Wait for the page to load
                     //options.AddArgument("--headless");
                     // Extract country code image URL
-                    string xPathCountryImg = "//div[@class='sc-bdnxRM hbrYOM']/img";
+                    string xPathCountryImg = "(//div[@class='_1iy1znb2'])/img";
                     string xPathLatestPoints = "//div[@class='_18v1mul1']";
+                    string xPathCountryCode = "(//div[@class='_1iy1znb2'])/img";
                     string xPathManagerName = "//div[contains(@class, '_1iy1znb2')]";
                     string xPathTotalTransfer = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[5]";
                     string xPathOverallPoints = "(//div[contains(@class, 'rd5cco6')])[1]";
@@ -346,7 +347,7 @@ public class FolderManager
                     string xPathSquadValue = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[7]";
                 
 
-                    //var element1 = driver.FindElement(By.XPath(xPathCountryImg));
+                    var element1 = driver.FindElement(By.XPath(xPathCountryImg));
                     var elementLp = driver.FindElement(By.XPath(xPathLatestPoints));
                     var elementManagerName = driver.FindElement(By.XPath(xPathManagerName)); 
                     //var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
@@ -363,8 +364,8 @@ public class FolderManager
                     managerDetails = teamName + "( " + ManagerName + " )";
                    // TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
                     TransferDetails = OverallPoints + "( " + OverallRank + " )" ;
-                    //string src = element1.GetAttribute("alt");
-                   // string countryCode = src; // Custom method to extract country code
+                    string src = element1.GetAttribute("src");
+                    string countryCode = ExtractCountryCode(src); // Custom method to extract country code
 
                     // Extract player details
                     string ply = "(//div[contains(@class,'_2j6lqn0')])";
@@ -403,12 +404,12 @@ public class FolderManager
                             Player_13 = playerNames[12],
                             Player_14 = playerNames[13],
                             Player_15 = playerNames[14],
-                            SXL = "countryCode" // Add country code as additional info
+                            SXL = countryCode // Add country code as additional info
 
 
                         });
                         LogCounter = LogCounter + 1;
-                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + "src");
+                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + countryCode);
                     }
                     /*
                      * OpenQA.Selenium.NoSuchElementException: 'no such element: Unable to locate element: {"method":"xpath","selector":"//div[@class='sc-bdnxRM hbrYOM']/img"}
@@ -444,6 +445,7 @@ public class FolderManager
         { "BetssonLeague", 1465097 },
         { "ArsenalMalta", 306338 },
         { "Overall", 314 },
+        { "KasbyLeague", 1625759 },
         { "FPLwire", 239645 }/*
 
 ,
@@ -460,7 +462,7 @@ public class FolderManager
         { "six", 153204L },
         { "FantasyShow", 56013L },
         { "Random1", 45353 },
-        { "Canal", 2257375 }*/
+        { "KasbyLeague", 1625759 }*/
     };
 
     // Dictionary to hold the key-value pairs for Airport and AirportCodes
@@ -554,7 +556,7 @@ public class FolderManager
     {
         string[] parts = url.Split('/');
         string countryCodeWithExtension = parts[parts.Length - 1];
-        string countryCode = countryCodeWithExtension.Replace(".gif", "");
+        string countryCode = countryCodeWithExtension.Replace(".svg", "");
         return countryCode;
     }
     /*
