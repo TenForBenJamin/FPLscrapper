@@ -16,7 +16,7 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("KasbyLeague");
+       long startFplID = GetLeagueNumber("PovertyLeague");
         int gw = 7;
 
       
@@ -389,21 +389,21 @@ public class FolderManager
                             
                             Teams = managerDetails,
                             Latp = Lp,
-                            Player_1 = playerNames[0],
-                            Player_2 = playerNames[1],
-                            Player_3 = playerNames[2],
-                            Player_4 = playerNames[3],
-                            Player_5 = playerNames[4],
-                            Player_6 = playerNames[5],
-                            Player_7 = playerNames[6],
-                            Player_8 = playerNames[7],
-                            Player_9 = playerNames[8],
-                            Player_10 = playerNames[9],
-                            Player_11 = playerNames[10],
-                            Player_12 = playerNames[11],
-                            Player_13 = playerNames[12],
-                            Player_14 = playerNames[13],
-                            Player_15 = playerNames[14],
+                            Player_1 = TrimAfterSecondSpace(playerNames[0]),
+                            Player_2 = TrimAfterSecondSpace(playerNames[1]),
+                            Player_3 = TrimAfterSecondSpace(playerNames[2]),
+                            Player_4 = TrimAfterSecondSpace(playerNames[3]),
+                            Player_5 = TrimAfterSecondSpace(playerNames[4]),
+                            Player_6 = TrimAfterSecondSpace(playerNames[5]),
+                            Player_7 = TrimAfterSecondSpace(playerNames[6]),
+                            Player_8 = TrimAfterSecondSpace(playerNames[7]),
+                            Player_9 = TrimAfterSecondSpace(playerNames[8]),
+                            Player_10 = TrimAfterSecondSpace(playerNames[9]),
+                            Player_11 = TrimAfterSecondSpace(playerNames[10]),
+                            Player_12 = TrimAfterSecondSpace(playerNames[11]),
+                            Player_13 = TrimAfterSecondSpace(playerNames[12]),
+                            Player_14 = TrimAfterSecondSpace(playerNames[13]),
+                            Player_15 = TrimAfterSecondSpace(playerNames[14]),
                             SXL = countryCode // Add country code as additional info
 
 
@@ -433,6 +433,22 @@ public class FolderManager
            
         }
     }
+    
+    public static string TrimAfterSecondSpace(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+
+        int firstSpace = input.IndexOf(' ');
+        if (firstSpace == -1)
+            return input;
+
+        int secondSpace = input.IndexOf(' ', firstSpace + 1);
+        if (secondSpace == -1)
+            return input;
+
+        return input.Substring(0, secondSpace);
+    } 
 
     // Dictionary to hold the key-value pairs (with long values)
     public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
