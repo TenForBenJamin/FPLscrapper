@@ -6,7 +6,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Text.Json;
 using System.Diagnostics.Metrics;
 using Newtonsoft.Json;
-using RestSharp;
+using RestSharp; 
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 public class FolderManager
@@ -16,10 +16,9 @@ public class FolderManager
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("PovertyLeague");
-        int gw = 7;
+       long startFplID = GetLeagueNumber("R2G");
+        int gw = 23;
 
-      
         string allRunner;
         // six 153204
         // PovertyLeague 1089205
@@ -63,7 +62,7 @@ public class FolderManager
         {
              leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
              GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
-            // ProcessAllAirports();
+             //ProcessAllAirports();
         }
 
 
@@ -116,7 +115,7 @@ public class FolderManager
     public static void Api_Scrapper()
     {   var source = "MLA";
         var destination = "BHX";
-        var month = "2025-05-01";
+        var month = "2026-01-01";
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var options = new ChromeOptions();
@@ -225,7 +224,7 @@ public class FolderManager
         List<string> eachDays = new List<string>();
         var destination = Aeroport;
         var month = "2025-08-01";
-        for (int mm = 8; mm < 13; mm++)
+        for (int mm = 11; mm < 13; mm++)
         {
             //month="2025-0" +mm +"-01";
             month = $"2025-{mm:D2}-01";
@@ -513,6 +512,7 @@ public class FolderManager
         { "Bucharest", "OTP" },
         { "Bournemouth", "BOH" },
         { "Norwich", "NWI" },
+        { "Newcastle", "NCL" },
         { "Glasgow", "GLA" },
         { "Seville", "SVQ" }
     };
