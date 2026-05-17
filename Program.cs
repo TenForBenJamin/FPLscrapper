@@ -31,7 +31,7 @@ public class FolderManager
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            leagueName = "all";
+           // leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -61,8 +61,8 @@ public class FolderManager
         else
         {
              leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-             GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
-             //ProcessAllAirports();
+             //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+             ProcessAllAirports();
         }
 
 
@@ -223,11 +223,11 @@ public class FolderManager
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var destination = Aeroport;
-        var month = "2025-08-01";
-        for (int mm = 11; mm < 13; mm++)
+        var month = "2026-06-01";
+        for (int mm = 05; mm < 13; mm++)
         {
             //month="2025-0" +mm +"-01";
-            month = $"2025-{mm:D2}-01";
+            month = $"2026-{mm:D2}-01";
             var options = new ChromeOptions();
             var client =
                 new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
@@ -514,7 +514,8 @@ public class FolderManager
         { "Norwich", "NWI" },
         { "Newcastle", "NCL" },
         { "Glasgow", "GLA" },
-        { "Seville", "SVQ" }
+        { "Seville", "SVQ" },
+        { "Tirana", "TIA" }
     };
     
     public static void ProcessAllAirports()
