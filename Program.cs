@@ -5,31 +5,34 @@ using System.IO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Text.Json;
 using System.Diagnostics.Metrics;
+using Newtonsoft.Json;
+using RestSharp; 
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 public class FolderManager
 
 {
     SimpleMethods sm= new SimpleMethods();
+    
 
     public static void Main(string[] args)
     {
-       long startFplID = GetLeagueNumber("PovertyLeague");
-        int gw = 32;
+       long startFplID = GetLeagueNumber("R2G");
+        int gw = 23;
 
-      
         string allRunner;
         // six 153204
         // PovertyLeague 1089205
         // R2G 420969
-        // h2h 153197 H
+        // h2h 153197 H | 733429
         // FPLwire 36074
         // Arsenal 36074
         // BetssonLeague 1173870
-        // KasbyLeague 190771
+        // KasbyLeague 1625759
         // ComicsLeague 1114702
         //  FantasyShow 56013
         string leagueName = GetLeagueNameByID(startFplID);
-            leagueName = "all";
+           // leagueName = "all";
         Dictionary<string, string> leaguePlayerNames;
 
         if (leagueName == "h2h")
@@ -58,27 +61,411 @@ public class FolderManager
         }
         else
         {
-            leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
-            GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+             leaguePlayerNames = GetLeaguePlayerNamesDictionary(startFplID, "c");
+             //GetFplDetailsArray(leaguePlayerNames, gw, leagueName);
+             ProcessAllAirports();
         }
 
 
     }
 
+    public static void Scrapper()
+    {
+        List<JsonFPLMembers> fplDetailsList = new List<JsonFPLMembers>();
+        var options = new ChromeOptions();
+        string destination="bcn";
+        //options.AddArgument("--headless");
+        string url = "https://www.ryanair.com/gb/en/trip/flights/select?adults=1&dateOut=2025-05-16&originIata=MLA&destinationIata=" +destination;
+        using (var driver = new ChromeDriver(options))
+        {
+            try
+            {
+                driver.Navigate().GoToUrl(url);
+                Thread.Sleep(3000); // Wait for the page to load
+                //options.AddArgument("--headless"); ////button[contains(@class,'date-item body-m-lg body-m-sm')]
+                 string Buttonclicker = "(//button[contains(@class,'date-item body-m-lg body-m-sm')])[2]";
+                 
+                 var dayvalue = driver.FindElement(By.XPath(Buttonclicker));
+                // string Lp = dayvalue.Text;
+                for (int ii = 0; ii < 3; ii++)
+                {
+                    for(int i=0; i<5; i++)
+                    {
+                        string xPathCountryImg1 = "(//ul)[2]/li[" +(i+1)+"]";
+                        var dayvalue1 = driver.FindElement(By.XPath(xPathCountryImg1));
+                        string Lp1 = dayvalue1.Text;
+                        Console.WriteLine(Lp1);
+                    }
+                    //dayvalue.Click();
+                }
+                   
+            }
+            catch (Exception ex)
+            {
+                // General catch for any other exceptions
+                Console.WriteLine("An unexpected error occurred: " + ex.Message);
+            }
+
+            finally
+            {
+                driver.Quit(); // Close the browser
+            }
+        }
+    }
+    
+    public static void Api_Scrapper()
+    {   var source = "MLA";
+        var destination = "BHX";
+        var month = GetFirstDayOfCurrentMonth();
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var options = new ChromeOptions();
+        var client =
+            new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+        var request = new RestRequest();
+        var response = client.Execute(request);
+        var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+        foreach (var fare in data.Outbound.Fares)
+        {
+            
+            Console.WriteLine($"Day: {fare.Day}");
+            // Console.WriteLine($"Arrival Date: {fare.ArrivalDate ?? "N/A"}");
+            // Console.WriteLine($"Departure Date: {fare.DepartureDate ?? "N/A"}");
+
+            if (fare.Price != null)
+            {
+                ryanAirList.Add(new JsonAirlineFareMembers
+                {
+                    Day = fare.Day,
+                    PriceValue = fare.Price?.Value.ToString(),
+                    Arrival = fare.ArrivalDate,
+                    Departure = fare.DepartureDate
+                });
+                
+                Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+            }
+            else
+            {
+                Console.WriteLine("Price: N/A");
+                ryanAirList.Add(new JsonAirlineFareMembers
+                {
+                    Day = fare.Day,
+                    PriceValue = "NA",
+                    Arrival = "NA",
+                    Departure = "NA"
+                });
+            }
+
+            Console.WriteLine();
+            
+            
+            
+        }
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+    public static void Api_Scrapper_MultiMonths()
+    {  
+        var source = "MLA";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var destination = "VNO";
+        var month = GetFirstDayOfCurrentMonth();
+        for (int mm = 5; mm < 11; mm++)
+        {
+            //month="2025-0" +mm +"-01";
+            month = $"2025-{mm:D2}-01";
+            var options = new ChromeOptions();
+            var client =
+                new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
+                    +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+            var request = new RestRequest();
+            var response = client.Execute(request);
+            var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+            foreach (var fare in data.Outbound.Fares)
+            {
+            
+                Console.WriteLine($"Day: {fare.Day}");
+
+                if (fare.Price != null)
+                {
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = fare.Price?.Value.ToString(),
+                        Arrival = fare.ArrivalDate,
+                        Departure = fare.DepartureDate
+                    });
+                    Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+                }
+                else
+                {
+                    Console.WriteLine("Price: N/A");
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = "NA",
+                        Arrival = "NA",
+                        Departure = "NA"
+                    });
+                }
+                Console.WriteLine();
+            
+            }
+        }
+      
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+
+   public static void Api_Scrapper_MultiMonths_Reusable(string Aeroport)
+    {  
+        var source = "MLA";
+        List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
+        List<string> eachDays = new List<string>();
+        var month = GetFirstDayOfCurrentMonth();
+        var destination = Aeroport;
+        int startMonth = int.Parse(month.Substring(5, 2));
+        // need to extract mm from month and replace with the variable.
+        for (int mm = startMonth; mm < 13; mm++)
+        {
+            //month="2025-0" +mm +"-01";
+            month = $"2026-{mm:D2}-01";
+            var options = new ChromeOptions();
+            var client =
+                new RestClient("https://www.ryanair.com/api/farfnd/v4/oneWayFares/MLA/" + destination
+                    +"/cheapestPerDay?outboundMonthOfDate=" + month +"&currency=EUR");
+            var request = new RestRequest();
+            var response = client.Execute(request);
+            var data = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+
+            foreach (var fare in data.Outbound.Fares)
+            {
+            
+                Console.WriteLine($"Day: {fare.Day}");
+
+                if (fare.Price != null)
+                {
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = fare.Price?.Value.ToString(),
+                        Arrival = fare.ArrivalDate,
+                        Departure = fare.DepartureDate
+                    });
+                    Console.WriteLine($"PriceValue: {fare.Price?.Value.ToString()}");
+                }
+                else
+                {
+                    Console.WriteLine("Price: N/A");
+                    ryanAirList.Add(new JsonAirlineFareMembers
+                    {
+                        Day = fare.Day,
+                        PriceValue = "NA",
+                        Arrival = "NA",
+                        Departure = "NA"
+                    });
+                }
+                Console.WriteLine();
+            
+            }
+        }
+      
+        string jsOutput = GenerateJsArray4Airlines(ryanAirList, destination, month);
+    }
+
+    public class JsonAirlineFareMembers
+    {
+        public string Day { get; set; }
+        public string PriceValue { get; set; }
+        public string Arrival { get; set; }
+        public string Departure { get; set; }
+    }
+
+    public class Price
+    {
+        public decimal Value { get; set; }
+        public string ValueMainUnit { get; set; }
+        public string ValueFractionalUnit { get; set; }
+        public string CurrencyCode { get; set; }
+        public string CurrencySymbol { get; set; }
+    }
+
+    public class Fare
+    {
+        public string Day { get; set; }
+        public string ArrivalDate { get; set; }
+        public string DepartureDate { get; set; }
+        public Price Price { get; set; }
+        public bool SoldOut { get; set; }
+        public bool Unavailable { get; set; }
+    }
+
+    public class Outbound
+    {
+        public List<Fare> Fares { get; set; }
+    }
+
+    public class ApiResponse
+    {
+        public Outbound Outbound { get; set; }
+    }
+    
+    
+
+    public static void GetFplDetailsArray(Dictionary<string, string> leaguePlayerNames, int gameweek ,string LeagueName)
+    {
+        List<JsonFPLMembers> fplDetailsList = new List<JsonFPLMembers>();
+        var options = new ChromeOptions();
+        options.AddArgument("--headless"); // Run the browser in headless mode
+
+        using (var driver = new ChromeDriver(options))
+        {
+            int LogCounter=0;
+            try
+            {
+                foreach (var entry in leaguePlayerNames)
+                {
+                    string teamName = entry.Value;
+                    string managerId = entry.Key;
+                    string managerDetails;
+                    string TransferDetails;
+
+                    // Navigate to the manager's FPL details page for the specified gameweek
+                    driver.Navigate().GoToUrl($"https://fantasy.premierleague.com/entry/{managerId}/event/{gameweek}");
+                    Thread.Sleep(3000); // Wait for the page to load
+                    //options.AddArgument("--headless");
+                    // Extract country code image URL
+                    string xPathCountryImg = "(//div[@class='_1iy1znb2'])/img";
+                    string xPathLatestPoints = "//div[@class='_18v1mul1']";
+                    string xPathCountryCode = "(//div[@class='_1iy1znb2'])/img";
+                    string xPathManagerName = "//div[contains(@class, '_1iy1znb2')]";
+                    string xPathTotalTransfer = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[5]";
+                    string xPathOverallPoints = "(//div[contains(@class, 'rd5cco6')])[1]";
+                    string xPathOverallRank = "(//div[contains(@class, 'rd5cco6')])[2]";
+                    string xPathTotalPlayers = "(//div[contains(@class, 'rd5cco6')])[3]";
+                    string xPathGameWeekpoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[4]";
+                    string xPathInTheBank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[6]";
+                    string xPathSquadValue = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[7]";
+                
+
+                    var element1 = driver.FindElement(By.XPath(xPathCountryImg));
+                    var elementLp = driver.FindElement(By.XPath(xPathLatestPoints));
+                    var elementManagerName = driver.FindElement(By.XPath(xPathManagerName)); 
+                    //var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
+                    //var elementSquadValue = driver.FindElement(By.XPath(xPathSquadValue));
+                    var elementOverallRank = driver.FindElement(By.XPath(xPathOverallRank));
+                    var elementOverallPoints = driver.FindElement(By.XPath(xPathOverallPoints));
+                    string Lp = elementLp.Text;
+                    Lp= ExtractFirstLine(Lp);
+                    string ManagerName = elementManagerName.Text;
+                    //string TotalTransfer = elementTotalTransfer.Text;
+                    string OverallRank = elementOverallRank.Text;
+                    //string SquadValue = elementSquadValue.Text;
+                    string OverallPoints = elementOverallPoints.Text;
+                    managerDetails = teamName + "( " + ManagerName + " )";
+                   // TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
+                    TransferDetails = OverallPoints + "( " + OverallRank + " )" ;
+                    string src = element1.GetAttribute("src");
+                    string countryCode = ExtractCountryCode(src); // Custom method to extract country code
+
+                    // Extract player details
+                    string ply = "(//div[contains(@class,'_2j6lqn0')])";
+                    // 15 entries (//div[contains(@class,'_2j6lqn0')])[6]/div/span
+                    var elementsWithClassName = driver.FindElements(By.XPath(ply));
+                    List<string> playerNames = new List<string>();
+
+                    for (int index = 0; index < elementsWithClassName.Count; index++)
+                    {
+                        var element = elementsWithClassName[index];
+                        string playerName = ConvertNewlineToSpace(element.Text); // Clean up player name
+                        playerNames.Add(playerName);
+                    }
+
+                    // Ensure the list has at least 15 players before accessing elements by index
+                    if (playerNames.Count >= 15)
+                    {
+                        fplDetailsList.Add(new JsonFPLMembers
+                        {
+                            manager_Name = TransferDetails,
+                            
+                            Teams = managerDetails,
+                            Latp = Lp,
+                            Player_1 = TrimAfterSecondSpace(playerNames[0]),
+                            Player_2 = TrimAfterSecondSpace(playerNames[1]),
+                            Player_3 = TrimAfterSecondSpace(playerNames[2]),
+                            Player_4 = TrimAfterSecondSpace(playerNames[3]),
+                            Player_5 = TrimAfterSecondSpace(playerNames[4]),
+                            Player_6 = TrimAfterSecondSpace(playerNames[5]),
+                            Player_7 = TrimAfterSecondSpace(playerNames[6]),
+                            Player_8 = TrimAfterSecondSpace(playerNames[7]),
+                            Player_9 = TrimAfterSecondSpace(playerNames[8]),
+                            Player_10 = TrimAfterSecondSpace(playerNames[9]),
+                            Player_11 = TrimAfterSecondSpace(playerNames[10]),
+                            Player_12 = TrimAfterSecondSpace(playerNames[11]),
+                            Player_13 = TrimAfterSecondSpace(playerNames[12]),
+                            Player_14 = TrimAfterSecondSpace(playerNames[13]),
+                            Player_15 = TrimAfterSecondSpace(playerNames[14]),
+                            SXL = countryCode // Add country code as additional info
+
+
+                        });
+                        LogCounter = LogCounter + 1;
+                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + countryCode);
+                    }
+                    /*
+                     * OpenQA.Selenium.NoSuchElementException: 'no such element: Unable to locate element: {"method":"xpath","selector":"//div[@class='sc-bdnxRM hbrYOM']/img"}
+                        (Session info: chrome=129.0.6668.91); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception'
+
+                     * */
+                }
+            }
+            catch (Exception ex)
+            {
+                // General catch for any other exceptions
+                Console.WriteLine("An unexpected error occurred: " + ex.Message);
+            }
+
+            finally
+            {
+                driver.Quit(); // Close the browser
+                // Example: Generate JS output and write to a file
+                string jsOutput = GenerateJsArray(fplDetailsList, LeagueName, gameweek);
+            }
+           
+        }
+    }
+    
+    public static string TrimAfterSecondSpace(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return input;
+
+        int firstSpace = input.IndexOf(' ');
+        if (firstSpace == -1)
+            return input;
+
+        int secondSpace = input.IndexOf(' ', firstSpace + 1);
+        if (secondSpace == -1)
+            return input;
+
+        return input.Substring(0, secondSpace);
+    } 
 
     // Dictionary to hold the key-value pairs (with long values)
     public static Dictionary<string, long> leagueData = new Dictionary<string, long>()
     {
         
        
-        { "PovertyLeague", 1089205L },
-        { "R2G", 420969L },
-        { "h2h", 153197L },
-        { "BetssonLeague", 1173870L },
-        { "KasbyLeague", 190771L },
-        { "Overall", 1114702L },
-        { "Arsenal", 1 }/*
-        
+        { "PovertyLeague", 1360978 },
+        { "R2G", 330720 },
+        { "h2h", 733429 },
+        { "BetssonLeague", 1465097 },
+        { "ArsenalMalta", 306338 },
+        { "Overall", 314 },
+        { "KasbyLeague", 1625759 },
+        { "FPLwire", 239645 }/*
+
 ,
         { "BlastersLeague", 1817990 },
         { "India", 120 },
@@ -92,10 +479,58 @@ public class FolderManager
         { "Arsenal", 1 },
         { "six", 153204L },
         { "FantasyShow", 56013L },
-        { "Random1", 45353 },   
-        { "Canal", 2257375 }*/
+        { "Random1", 45353 },
+        { "KasbyLeague", 1625759 }*/
     };
 
+    // Dictionary to hold the key-value pairs for Airport and AirportCodes
+    public static Dictionary<string, string> portDataMLA = new Dictionary<string, string>()
+    {
+        { "Riga", "RIX" },
+        { "RomeFCO", "FCO" },
+        { "LondonStanstead", "STN" },
+        { "VeniceTreviso", "TSF" },
+        { "Eindhoven", "EIN" },
+        { "Cologne", "CGN" },
+        { "Madrid", "MAD" },
+        { "Catania", "CTA" },
+        { "Manchester", "MAN" },
+        { "Zagreb", "ZAG" },
+        { "Bologna", "BLQ" },
+        { "Birmingham", "BHX" },
+        { "Paphos", "PFO" },
+        { "Barcelona", "BCN" },
+        { "Perugia", "PEG" },
+        { "Memmingem", "FMM" },
+        { "Luxembourg", "LUX" },
+        { "Liverpool", "LPL" },
+        { "Edinburgh", "EDI" },
+        { "Krakow", "KRK" },
+        { "StockhomArlanda", "ARN" },
+        { "Nis", "INI" },
+        { "belfast", "BFS" },
+        { "Sofia", "SOF" },
+        { "Chania", "CHQ" },
+        { "Porto", "OPO" },
+        { "Bucharest", "OTP" },
+        { "Bournemouth", "BOH" },
+        { "Norwich", "NWI" },
+        { "Newcastle", "NCL" },
+        { "Glasgow", "GLA" },
+        { "Seville", "SVQ" },
+        { "Tirana", "TIA" },
+        { "Gothenburg", "GOT" },
+        { "Charleoi", "CRL" }
+    };
+    
+    public static void ProcessAllAirports()
+    {
+        foreach (var airport in portDataMLA.Values)
+        {
+            Api_Scrapper_MultiMonths_Reusable(airport);
+        }
+    }
+    
     public static string GetLeagueNameByID(long leagueId)
     {
         foreach (var kvp in leagueData)
@@ -143,7 +578,7 @@ public class FolderManager
     {
         string[] parts = url.Split('/');
         string countryCodeWithExtension = parts[parts.Length - 1];
-        string countryCode = countryCodeWithExtension.Replace(".gif", "");
+        string countryCode = countryCodeWithExtension.Replace(".svg", "");
         return countryCode;
     }
     /*
@@ -165,124 +600,7 @@ public class FolderManager
         return jsOutput;
     }*/
 
-    public static void GetFplDetailsArray(Dictionary<string, string> leaguePlayerNames, int gameweek ,string LeagueName)
-    {
-        List<JsonFPLMembers> fplDetailsList = new List<JsonFPLMembers>();
-        var options = new ChromeOptions();
-        options.AddArgument("--headless"); // Run the browser in headless mode
-
-        using (var driver = new ChromeDriver(options))
-        {
-            int LogCounter=0;
-            try
-            {
-                foreach (var entry in leaguePlayerNames)
-                {
-                    string teamName = entry.Value;
-                    string managerId = entry.Key;
-                    string managerDetails;
-                    string TransferDetails;
-
-                    // Navigate to the manager's FPL details page for the specified gameweek
-                    driver.Navigate().GoToUrl($"https://fantasy.premierleague.com/entry/{managerId}/event/{gameweek}");
-                    Thread.Sleep(3000); // Wait for the page to load
-                    options.AddArgument("--headless");
-                    // Extract country code image URL
-                    string xPathCountryImg = "//div[@class='sc-bdnxRM hbrYOM']/img";
-                    string xPathLatestPoints = "//div[@class='EntryEvent__PrimaryValue-sc-l17rqm-4 jsdnqB']";
-                    string xPathManagerName = "//div[contains(@class, 'Entry__EntryName-sc-1kf863-0 cMEsev')]";
-                    string xPathTotalTransfer = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[5]";
-                    string xPathOverallPoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[1]";
-                    string xPathOverallRank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[2]";
-                    string xPathTotalPlayers = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[3]";
-                    string xPathGameWeekpoints = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[4]";
-                    string xPathInTheBank = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[6]";
-                    string xPathSquadValue = "(//div[contains(@class, 'Entry__DataListValue-sc-1kf863-5 jUtEoF')])[7]";
-                
-
-                    //var element1 = driver.FindElement(By.XPath(xPathCountryImg));
-                    var elementLp = driver.FindElement(By.XPath(xPathLatestPoints));
-                    var elementManagerName = driver.FindElement(By.XPath(xPathManagerName)); 
-                    var elementTotalTransfer = driver.FindElement(By.XPath(xPathTotalTransfer));
-                    var elementSquadValue = driver.FindElement(By.XPath(xPathSquadValue));
-                    var elementOverallRank = driver.FindElement(By.XPath(xPathOverallRank));
-                    var elementOverallPoints = driver.FindElement(By.XPath(xPathOverallPoints));
-                    string Lp = elementLp.Text;
-                    string ManagerName = elementManagerName.Text;
-                    string TotalTransfer = elementTotalTransfer.Text;
-                    string OverallRank = elementOverallRank.Text;
-                    string SquadValue = elementSquadValue.Text;
-                    string OverallPoints = elementOverallPoints.Text;
-                    managerDetails = teamName + "( " + ManagerName + " )";
-                    TransferDetails = OverallPoints + "( " + OverallRank + " )" + " TotalXfr : " + TotalTransfer;
-                    //string src = element1.GetAttribute("alt");
-                   // string countryCode = src; // Custom method to extract country code
-
-                    // Extract player details
-                    string ply = "(//span[contains(@class,'styles__PitchElementData-sc-hv19ot-7 huoEoG')])";
-                    var elementsWithClassName = driver.FindElements(By.XPath(ply));
-                    List<string> playerNames = new List<string>();
-
-                    for (int index = 0; index < elementsWithClassName.Count; index++)
-                    {
-                        var element = elementsWithClassName[index];
-                        string playerName = ConvertNewlineToSpace(element.Text); // Clean up player name
-                        playerNames.Add(playerName);
-                    }
-
-                    // Ensure the list has at least 15 players before accessing elements by index
-                    if (playerNames.Count >= 15)
-                    {
-                        fplDetailsList.Add(new JsonFPLMembers
-                        {
-                            manager_Name = TransferDetails,
-                            
-                            Teams = managerDetails,
-                            Latp = Lp,
-                            Player_1 = playerNames[0],
-                            Player_2 = playerNames[1],
-                            Player_3 = playerNames[2],
-                            Player_4 = playerNames[3],
-                            Player_5 = playerNames[4],
-                            Player_6 = playerNames[5],
-                            Player_7 = playerNames[6],
-                            Player_8 = playerNames[7],
-                            Player_9 = playerNames[8],
-                            Player_10 = playerNames[9],
-                            Player_11 = playerNames[10],
-                            Player_12 = playerNames[11],
-                            Player_13 = playerNames[12],
-                            Player_14 = playerNames[13],
-                            Player_15 = playerNames[14],
-                            SXL = "countryCode" // Add country code as additional info
-
-
-                        });
-                        LogCounter = LogCounter + 1;
-                        Console.WriteLine(LogCounter + " rank " + teamName + " Latest Points | " + Lp + "| Name : " +ManagerName +" | Overall Points " + OverallPoints+ " | Overall Rank " + OverallRank+ " | Nation : " + "src");
-                    }
-                    /*
-                     * OpenQA.Selenium.NoSuchElementException: 'no such element: Unable to locate element: {"method":"xpath","selector":"//div[@class='sc-bdnxRM hbrYOM']/img"}
-                        (Session info: chrome=129.0.6668.91); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception'
-
-                     * */
-                }
-            }
-            catch (Exception ex)
-            {
-                // General catch for any other exceptions
-                Console.WriteLine("An unexpected error occurred: " + ex.Message);
-            }
-
-            finally
-            {
-                driver.Quit(); // Close the browser
-                // Example: Generate JS output and write to a file
-                string jsOutput = GenerateJsArray(fplDetailsList, LeagueName, gameweek);
-            }
-           
-        }
-    }
+  
     public static string ConvertNewlineToSpace(string input)
     {
         // Replace '\n' with a space
@@ -298,7 +616,7 @@ public class FolderManager
         long unixTime = GetUnixTimestamp();
         string dateFolderName = GenerateDateFolderName();
         ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
-        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB" +
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW" +gw +"/DB/new" +
                           "/";
         string directoryPath = Path.GetDirectoryName(mainPath);
         if (!Directory.Exists(directoryPath))
@@ -306,6 +624,28 @@ public class FolderManager
             Directory.CreateDirectory(directoryPath);
         }
         string filePath = directoryPath + "/" + LigaNamen + ".js";
+       // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
+        File.WriteAllText(filePath, jsOutput);
+        return jsOutput;
+    }public  static string GenerateJsArray4Airlines(List<JsonAirlineFareMembers> members , string LigaNamen, string month)
+    {
+        string jsonString = JsonSerializer.Serialize(members, new JsonSerializerOptions { WriteIndented = true });
+        string jsOutput = $"var s = {jsonString};";
+        //int gw = 6;
+        long unixTime = GetUnixTimestamp();
+        string dateFolderName = GenerateDateFolderName();
+        ///Users/sibin/IdeaProjects/t4b/FPL/GW/GW19/DB/Overall.js
+        string mainPath = "/Users/sibin/IdeaProjects/t4b/FPL/GW/GW33/DB/"+LigaNamen+ "/";;
+        string directoryPath = Path.GetDirectoryName(mainPath);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        LigaNamen = LigaNamen + "_" + DateTime.Parse(month).ToString("MMM") + "_" + unixTime;
+        string filePath = directoryPath + "/" + LigaNamen + ".js";
+        // Sample Name STN_2025-10-01
+        //LPL_Oct_1745782241
        // string filePath = directoryPath + "/" + LigaNamen + "_" +unixTime  + ".js";
         File.WriteAllText(filePath, jsOutput);
         return jsOutput;
@@ -390,6 +730,23 @@ public class FolderManager
             Console.WriteLine($"League name '{leagueName}' not found.");
             return 90980; // Return a sentinel value to indicate the key was not found
         }
+    }
+    
+    static string ExtractFirstLine(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        return input.Split('\n')[0].Trim();
+    }
+    
+    
+    static string GetFirstDayOfCurrentMonth()
+    {
+        var now = DateTime.Now;
+        return $"{now:yyyy-MM}-01";
     }
 
 }
