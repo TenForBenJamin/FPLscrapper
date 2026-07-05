@@ -13,6 +13,7 @@ public class FolderManager
 
 {
     SimpleMethods sm= new SimpleMethods();
+    
 
     public static void Main(string[] args)
     {
@@ -115,7 +116,7 @@ public class FolderManager
     public static void Api_Scrapper()
     {   var source = "MLA";
         var destination = "BHX";
-        var month = "2026-01-01";
+        var month = GetFirstDayOfCurrentMonth();
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var options = new ChromeOptions();
@@ -169,7 +170,7 @@ public class FolderManager
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
         var destination = "VNO";
-        var month = "2025-06-01";
+        var month = GetFirstDayOfCurrentMonth();
         for (int mm = 5; mm < 11; mm++)
         {
             //month="2025-0" +mm +"-01";
@@ -222,9 +223,11 @@ public class FolderManager
         var source = "MLA";
         List<JsonAirlineFareMembers> ryanAirList = new List<JsonAirlineFareMembers>();
         List<string> eachDays = new List<string>();
+        var month = GetFirstDayOfCurrentMonth();
         var destination = Aeroport;
-        var month = "2026-06-01";
-        for (int mm = 05; mm < 13; mm++)
+        int startMonth = int.Parse(month.Substring(5, 2));
+        // need to extract mm from month and replace with the variable.
+        for (int mm = startMonth; mm < 13; mm++)
         {
             //month="2025-0" +mm +"-01";
             month = $"2026-{mm:D2}-01";
@@ -515,7 +518,9 @@ public class FolderManager
         { "Newcastle", "NCL" },
         { "Glasgow", "GLA" },
         { "Seville", "SVQ" },
-        { "Tirana", "TIA" }
+        { "Tirana", "TIA" },
+        { "Gothenburg", "GOT" },
+        { "Charleoi", "CRL" }
     };
     
     public static void ProcessAllAirports()
@@ -735,6 +740,13 @@ public class FolderManager
         }
 
         return input.Split('\n')[0].Trim();
+    }
+    
+    
+    static string GetFirstDayOfCurrentMonth()
+    {
+        var now = DateTime.Now;
+        return $"{now:yyyy-MM}-01";
     }
 
 }
